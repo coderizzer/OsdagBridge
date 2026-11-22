@@ -1,0 +1,31 @@
+# TC-02: Custom Steel Properties
+# OsdagBridge Plate Girder Module
+# Branch: dev | Tester: coderizzer | Date: 2026-11-22
+
+bridge:
+  type: plate_girder
+  span_m: 20.0
+  number_of_girders: 3
+  girder_spacing_m: 3.0
+  deck_width_m: 9.5
+
+materials:
+  steel_grade: Custom
+  steel_custom:
+    fy_MPa: 345
+    fu_MPa: 490
+    E_MPa: 210000
+    poisson_ratio: 0.3
+  concrete_grade: M30
+
+design:
+  mode: optimised
+
+expected_outcome:
+  status: FAIL
+  reason: "AttributeError: 'InputDock' object has no attribute '_set_material_fields_editable'"
+  bug_reference: "Bug #1"
+  traceback: |
+    File src/osdagbridge/desktop/ui/docks/input_dock.py, line 778, in _on_material_changed
+      self._set_material_fields_editable(False)
+    AttributeError: 'InputDock' object has no attribute '_set_material_fields_editable'

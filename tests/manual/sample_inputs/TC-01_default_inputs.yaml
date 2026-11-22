@@ -1,0 +1,29 @@
+# TC-01: Default Inputs — Single Design Run
+# OsdagBridge Plate Girder Module
+# Branch: dev | Tester: coderizzer | Date: 2026-11-22
+
+bridge:
+  type: plate_girder
+  span_m: 15.0
+  number_of_girders: 4
+  girder_spacing_m: 2.5
+  deck_width_m: 10.5
+
+loads:
+  wearing_course_thickness_mm: 80
+  wearing_course_density_kNm3: 24.0  # NOTE: validator silently clamps this to 10.0 (Bug #3)
+  dead_load_factor: 1.35
+  live_load_factor: 1.5
+  irc_class: AA
+
+materials:
+  steel_grade: E250
+  concrete_grade: M30
+
+design:
+  mode: optimised
+
+expected_outcome:
+  status: FAIL
+  reason: "wearing course density clamped from 24 to 10 kN/m3 by validator.py:319"
+  bug_reference: "Bug #3"

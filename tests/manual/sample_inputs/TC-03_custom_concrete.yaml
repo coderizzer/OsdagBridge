@@ -1,0 +1,26 @@
+# TC-03: Custom Concrete Deck Properties
+# OsdagBridge Plate Girder Module
+# Branch: dev | Tester: coderizzer | Date: 2026-11-22
+
+bridge:
+  type: plate_girder
+  span_m: 18.0
+  number_of_girders: 4
+  girder_spacing_m: 2.5
+  deck_width_m: 10.5
+  deck_thickness_mm: 220
+  reinforcement_cover_mm: 40
+
+materials:
+  steel_grade: E250
+  concrete_grade: M40
+  concrete_custom:
+    fck_MPa: 40
+    Ec_GPa: 33.5
+
+design:
+  mode: optimised
+
+expected_outcome:
+  status: PASS
+  reason: "Concrete grade combo handled correctly; fck=40 MPa persists to input_dict[KEY_CONCRETE_FY]"

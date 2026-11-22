@@ -1,0 +1,35 @@
+# TC-05: Bearing Stiffener Configuration
+# OsdagBridge Plate Girder Module
+# Branch: dev | Tester: coderizzer | Date: 2026-11-22
+
+bridge:
+  type: plate_girder
+  span_m: 20.0
+  number_of_girders: 4
+  girder_spacing_m: 2.5
+  deck_width_m: 10.5
+
+stiffeners:
+  bearing:
+    count: 4
+    width_mm: 100
+    thickness_mm: 12
+    grade: E250
+  intermediate:
+    spacing_mm: 1500
+
+materials:
+  steel_grade: E250
+  concrete_grade: M30
+
+design:
+  mode: optimised
+
+expected_outcome:
+  status: FAIL
+  reason: |
+    designer.py lines 534-538: n_sides and bs_n_plates both read from
+    KEY_MP_STIFFENER_NO_BEARING_STIFFENERS (value=4).
+    n_sides should be 1 (single-sided stiffener), not 4.
+    Stiffener capacity check is therefore incorrect.
+  bug_reference: "Bug #4"

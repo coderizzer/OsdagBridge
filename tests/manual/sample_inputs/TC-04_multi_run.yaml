@@ -1,0 +1,53 @@
+# TC-04: Multi-Run State Persistence (3 Consecutive Runs)
+# OsdagBridge Plate Girder Module
+# Branch: dev | Tester: coderizzer | Date: 2026-11-22
+
+# --- Run 1 ---
+run_1:
+  bridge:
+    span_m: 15.0
+    number_of_girders: 4
+    girder_spacing_m: 2.5
+    deck_width_m: 10.5
+  materials:
+    steel_grade: E250
+    concrete_grade: M30
+  design:
+    mode: optimised
+  expected:
+    status: FAIL_IF_BUG2_PRESENT
+    reason: "If design fails, _finish_loading() double-call locks UI permanently"
+
+# --- Run 2 (after clicking Unlock) ---
+run_2:
+  bridge:
+    span_m: 20.0  # Changed
+    number_of_girders: 4
+    girder_spacing_m: 2.5
+    deck_width_m: 10.5
+  materials:
+    steel_grade: E350  # Changed
+    concrete_grade: M30
+  design:
+    mode: optimised
+  expected:
+    status: PASS_IF_RUN1_SUCCEEDED
+    reason: "solve_extend_basic_input_dict() regenerates dynamic keys; fresh QThread worker spawned"
+
+# --- Run 3 (after clicking Unlock) ---
+run_3:
+  bridge:
+    span_m: 20.0
+    number_of_girders: 5  # Changed
+    girder_spacing_m: 2.2
+    deck_width_m: 11.0
+  materials:
+    steel_grade: E350
+    concrete_grade: M35  # Changed
+  design:
+    mode: optimised
+  expected:
+    status: PASS_IF_RUN2_SUCCEEDED
+    reason: "Output dict fully overwritten; 3D model regenerated"
+
+bug_reference: "Bug #2"
