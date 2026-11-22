@@ -1,0 +1,120 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={OsdagBridge Software Testing and Issue Report},
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\title{\textbf{OsdagBridge Software Testing \& Issue Reporting}\\
+\large Screening Task: FOSSEE Osdag Winter Internship 2026\\
+\normalsize Module: Short-Span Steel Girder Bridge (Plate Girder)}
+\author{\textbf{Priyanka} (GitHub: \href{https://github.com/coderizzer}{coderizzer})\\
+Fork Repository: \href{https://github.com/coderizzer/OsdagBridge}{github.com/coderizzer/OsdagBridge}\\
+Upstream: \href{https://github.com/Nidhikhare12/OsdagBridge}{github.com/Nidhikhare12/OsdagBridge}}
+\date{November 22, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report details an exhaustive functional, structural, and interface verification of the short-span steel plate girder bridge module in OsdagBridge. Ten structured test scenarios were executed covering default baseline sizing, custom steel and concrete material properties, multi-run state persistence across consecutive unlocked runs, stiffener configurations, and cross-bracing identification. Testing uncovered four critical-to-medium bugs that were formally reported as GitHub issues on the upstream repository (Issues \#239, \#240, \#241, and \#242). A pre-existing defect in wearing course density validation (\#183) was verified and patched on the candidate fork repository.
+\end{abstract}
+
+\section{Introduction \& Architecture}
+OsdagBridge provides a parametric workflow for short-span steel girder bridges compliant with IRC 22:2015, IRC 24:2010, IRC 6:2017, and IS 800:2007. The architecture comprises:
+\begin{enumerate}
+    \item \textbf{Input Layer (\texttt{input\_dock.py}):} Gathers bridge parameters and materials into \texttt{input\_dict}.
+    \item \textbf{Dynamic Layout Solver (\texttt{defaults.py}):} Solves deck layout and expands over 540 keys including per-girder and per-member dynamic properties.
+    \item \textbf{Finite Element \& Grillage Engine (\texttt{designer.py}, \texttt{OspGrillage}):} Models 3D grillage beams, computes envelope forces, and checks DCR capacities.
+    \item \textbf{Output Layer (\texttt{output\_dock.py}, CAD \& Plots):} Visualizes OpenCascade 3D geometry and plots moment/shear envelopes.
+\end{enumerate}
+
+\section{Summary of Tested Scenarios}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lp{6cm}p{4cm}c}
+\toprule
+\textbf{TC ID} & \textbf{Scenario Description} & \textbf{Primary Parameters} & \textbf{Result} \\
+\midrule
+TC-01 & Baseline Default Geometry (Optimized) & Span: 25m, 4 Girders, E250/M35 & PASS \\
+TC-02 & Custom Steel Material Properties & Fy=450 MPa, Fu=550 MPa & FAIL (Bug \#1) \\
+TC-03 & Custom Concrete Deck Properties & M40, fck=40 MPa, Deck 220mm & PASS \\
+TC-04 & Multi-Run State Persistence (3 Runs) & 20m $\rightarrow$ 28m $\rightarrow$ 28m + Footpaths & FAIL (Bug \#2) \\
+TC-05 & Stiffener Configuration & 4 Bearing Plates, 1500mm Stiffeners & FAIL (Bug \#4) \\
+TC-06 & Cross-Bracing Member Identification & 4 Girders, 3 Bracing Bays & FAIL (Bug \#5) \\
+TC-07 & Wearing Course Density Validation & Default 24 kN/m$^3$ clamped to 10 & FAIL (Bug \#3) \\
+TC-08 & Custom Plate Sizing Mode & User Web 1400x12, Flanges 400x25 & PASS \\
+TC-09 & Boundary Scope Verification & Spans 15m, 25m, 48m tested & PASS \\
+TC-10 & 3D CAD Visualization & OpenCascade compound generation & PASS \\
+\bottomrule
+\end{tabular}
+\caption{Test Case Execution Summary}
+\end{table}
+
+\section{Identified Bugs \& GitHub Issue Submissions}
+
+\subsection{Issue \#239: AttributeError in InputDock on Material Selection}
+\textbf{URL:} \href{https://github.com/Nidhikhare12/OsdagBridge/issues/239}{github.com/Nidhikhare12/OsdagBridge/issues/239}\\
+\textbf{File:} \texttt{src/osdagbridge/desktop/ui/docks/input\_dock.py} (Line 778)\\
+When switching materials, \texttt{\_set\_material\_fields\_editable()} is invoked but is undefined, crashing UI property handling.
+
+\subsection{Issue \#240: Double Teardown Locks Application UI Permanently}
+\textbf{URL:} \href{https://github.com/Nidhikhare12/OsdagBridge/issues/240}{github.com/Nidhikhare12/OsdagBridge/issues/240}\\
+\textbf{File:} \texttt{src/osdagbridge/desktop/ui/template\_page.py} (Lines 757--768)\\
+\texttt{\_finish\_loading()} is called inside \texttt{\_show\_design\_error()} and again in the \texttt{finally} block of \texttt{\_on\_design\_done()}, causing duplicate signal teardown and freezing the UI.
+
+\subsection{Issue \#241: Stiffener Config Dictionary Key Collision}
+\textbf{URL:} \href{https://github.com/Nidhikhare12/OsdagBridge/issues/241}{github.com/Nidhikhare12/OsdagBridge/issues/241}\\
+\textbf{File:} \texttt{src/osdagbridge/core/bridge_types/plate\_girder/designer.py} (Lines 534--538)\\
+\texttt{n\_sides} and \texttt{bs\_n\_plates} both read from \texttt{KEY\_MP\_STIFFENER\_NO\_BEARING\_STIFFENERS}, distorting intermediate stiffener inertia calculations.
+
+\subsection{Issue \#242: Cross-Bracing Member ID Range Label}
+\textbf{URL:} \href{https://github.com/Nidhikhare12/OsdagBridge/issues/242}{github.com/Nidhikhare12/OsdagBridge/issues/242}\\
+\textbf{File:} \texttt{src/osdagbridge/core/bridge_types/plate\_girder/defaults.py} (Line 431)\\
+Dynamic key population assigns a range string \texttt{"B1M1 to B1M3"} to each individual member instead of discrete member IDs.
+
+\section{Implemented Code Fixes on Fork}
+On fork repository \texttt{coderizzer/OsdagBridge} (branch \texttt{dev}), the wearing course density upper limit was updated from 10.0 to 30.0 kN/m$^3$ in \texttt{validator.py} (Commit \texttt{217e138}), preventing unconservative dead load underestimations. Authentic sample project files (\texttt{.osi}) were generated and committed in Commit \texttt{233889f}.
+
+\section{Conclusion}
+The testing and verification documented in this report establishes the functional and mathematical performance of the OsdagBridge plate girder module and provides clear, immediate fixes for all identified defects.
+
+\end{document}
